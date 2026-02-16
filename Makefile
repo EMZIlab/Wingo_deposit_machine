@@ -15,7 +15,7 @@ DEP:=$(OBJ:.o=.d)
 CPPFLAGS+=$(addprefix -I,$(INCLUDE_DIRS)) -MMD -MP -Iexternal/clay
 CFLAGS+=-D_FILE_OFFSET_BITS=64 -std=c17 -O2 -Wall -Wextra -Wshadow -Wconversion -Wundef \
         $(shell pkg-config --cflags $(PKGS)) -pthread
-LDLIBS+=$(shell pkg-config --libs $(PKGS)) -lm -pthread
+LDLIBS+=$(shell pkg-config --libs $(PKGS)) -lm -pthread -latomic
 
 .PHONY:all clean
 all:$(TARGET)

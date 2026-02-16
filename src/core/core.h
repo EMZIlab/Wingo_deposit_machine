@@ -1,9 +1,9 @@
 #pragma once
 
 #include <signal.h>
-#include <gpiod.h>
-#include <stdio.h>
-#include <unistd.h>
+// #include <gpiod.h>
+// #include <stdio.h>
+// #include <unistd.h>
 
 
 static volatile int run = 1;

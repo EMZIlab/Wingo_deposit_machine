@@ -2,8 +2,12 @@
 #include <stdio.h>
 #include <gpiod.h>
 #include <signal.h>
-// #include <unistd.h>
 #include <time.h>
+#include "hx711_driver.h"
+#include "hx711_thread.h"
+#include "stepper_driver.h"
+#include "shared.h"
+#include <stdatomic.h>
 
 
 
@@ -11,56 +15,57 @@
     
 // }
 
+static uint32_t now_us(void){
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint64_t us = (uint64_t)(int64_t)ts.tv_sec * 1000000u
+                + (uint64_t)(int64_t)ts.tv_nsec / 1000u;
+    return (uint32_t)us;
+}
+
+static void nsleep(long ns){
+    struct timespec ts = { .tv_sec = 0, .tv_nsec = ns };
+    nanosleep(&ts, 0);
+}
+
 void start_core(const volatile sig_atomic_t* running) {
     // setup();
-    struct timespec ts = { .tv_sec = 0, .tv_nsec = 100000 }; // 100 us
-    const unsigned outs[] = {16,13,12,24,23,17};
-    const unsigned ins[]  = {27,22};
-    const int n_out = (int)(sizeof(outs)/sizeof(outs[0]));
-    const int n_in  = (int)(sizeof(ins)/sizeof(ins[0]));
 
-    struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip4");
-    if (!chip) { perror("gpiod_chip_open"); return; }
+    hx711_t scale = {
+        .gpiochip = "/dev/gpiochip4",
+        .sck_line = 6,
+        .dout_line = 5,
+        .tare_offset_cts = 1748000,     // set yours
+        .counts_per_kg   = 951010.0f,   // your calibration
+    };
 
-    struct gpiod_line_bulk ob, ib;
-    gpiod_line_bulk_init(&ob);
-    gpiod_line_bulk_init(&ib);
+        stepper_motor m1 = {
+        .gpiochip = "/dev/gpiochip4",
+        .stp_per_rev = 200u * 4u,
+        .pulse_width_us = 50u,
+        .pul_pin = 24,
+        .dir_pin = 23,
+        .enable_pin = 17,
+        .home_pin = 22,
+        .home_active_level = 0,
+        .dir_invert = 0,
+        .en_active_level = 0,
+    };
 
-    for (int i=0;i<n_out;i++) gpiod_line_bulk_add(&ob, gpiod_chip_get_line(chip, outs[i]));
-    for (int i=0;i<n_in;i++)  gpiod_line_bulk_add(&ib, gpiod_chip_get_line(chip, ins[i]));
+    if (stepper_init(&m1) < 0) return;
+    if (stepper_enable(&m1) < 0) return;
 
-    int init_vals[6] = {0,0,0,0,0,0};
-    if (gpiod_line_request_bulk_output(&ob, "out", init_vals) < 0) { perror("req out"); return; }
-    if (gpiod_line_request_bulk_input(&ib, "in") < 0)            { perror("req in");  return; }
+    (void)stepper_start_move_rel(&m1, 8000, 1000u, 500u);
 
-    int out_state = 0;
-
-    while(*running) {
-        int in_vals[2];
-        if (gpiod_line_get_value_bulk(&ib, in_vals) < 0) { perror("read in"); break; }
-
-        int limit = (in_vals[0]==0) || (in_vals[1]==0);     // active-low limit switches
-
-        if (limit) out_state = 0; else out_state ^= 1;      // toggle when no limit
-
-        int out_vals[6];
-        for (int i=0;i<n_out;i++) out_vals[i] = out_state;
-        if (gpiod_line_set_value_bulk(&ob, out_vals) < 0) { perror("write out"); break; }
-
-        printf("IN27=%d IN22=%d  limit=%d  OUT=%d\n", in_vals[0], in_vals[1], limit, out_state);
-        fflush(stdout);
-
-        
-        nanosleep(&ts, NULL); // 5 Hz toggle/print
-
+    if (hx711_init(&scale) == 0) {
+        hx711_thread_start(running, &scale);
     }
 
-    // safe low
-    int out_low[6] = {0,0,0,0,0,0};
-    gpiod_line_set_value_bulk(&ob, out_low);
+    while(*running) {
+        stepper_update(&m1, now_us());
+        nsleep(1000000L); // 1 ms loop
+    }
 
-    gpiod_line_release_bulk(&ib);
-    gpiod_line_release_bulk(&ob);
-    gpiod_chip_close(chip);
-    return;
+    hx711_close(&scale);
+    stepper_disable(&m1);
 }
