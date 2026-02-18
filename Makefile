@@ -13,7 +13,7 @@ OBJ:=$(patsubst %.c,$(BUILD_DIR)/%.o,$(SRC))
 DEP:=$(OBJ:.o=.d)
 
 CPPFLAGS+=$(addprefix -I,$(INCLUDE_DIRS)) -MMD -MP -Iexternal/clay
-CFLAGS+=-D_FILE_OFFSET_BITS=64 -std=c17 -O2 -Wall -Wextra -Wshadow -Wconversion -Wundef \
+CFLAGS+=-D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -std=c17 -O2 -Wall -Wextra -Wshadow -Wconversion -Wundef \
         $(shell pkg-config --cflags $(PKGS)) -pthread
 LDLIBS+=$(shell pkg-config --libs $(PKGS)) -lm -pthread -latomic
 

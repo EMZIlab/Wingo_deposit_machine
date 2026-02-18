@@ -22,6 +22,7 @@ static void* hx711_thread_fn(void *p){
         int32_t raw;
         if (hx711_read_raw(a->dev, &raw) == 0) {
             float kg = hx711_raw_to_kg(a->dev, raw);
+            atomic_store(&scale_raw_value, raw);
             atomic_store(&g_scale_kg, kg);
         }
         nsleep(50L * 1000L * 1000L); // 50 ms
