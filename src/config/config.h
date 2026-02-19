@@ -8,6 +8,7 @@ typedef struct app_config {
     float    hx_counts_per_kg;
 
     // ---- Move target ----
+    int32_t move_stp;
     uint32_t move_speed_sps;
     uint32_t move_acc_sps2;
 

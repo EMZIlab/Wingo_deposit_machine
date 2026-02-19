@@ -33,6 +33,7 @@ void config_set_defaults(app_config_t *c){
     c->hx_counts_per_kg   = 951010.0f;
 
     // Move defaults
+    c->move_stp = 2000;
     c->move_speed_sps = 10000u;
     c->move_acc_sps2  = 10000u;
 
@@ -91,6 +92,7 @@ static int apply_kv(app_config_t *c, const char *k, const char *v){
     if (streq(k, "hx.counts_per_kg"))   return parse_f32(v, &c->hx_counts_per_kg);
 
     // Move
+    if (streq(k, "move.stp"))  return parse_i32(v, &c->move_stp);
     if (streq(k, "move.speed_sps")) return parse_u32(v, &c->move_speed_sps);
     if (streq(k, "move.acc_sps2"))  return parse_u32(v, &c->move_acc_sps2);
 

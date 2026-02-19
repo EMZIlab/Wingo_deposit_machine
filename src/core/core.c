@@ -73,7 +73,7 @@ static void weight_treshold(const volatile sig_atomic_t *running, const app_conf
 
     weigh_and_log(running, cfg);
 
-    (void)stepper_start_move_abs(m1, 2000, cfg->move_speed_sps, cfg->move_acc_sps2);
+    (void)stepper_start_move_abs(m1, cfg->move_stp, cfg->move_speed_sps, cfg->move_acc_sps2);
     while (*running && m1->state == STP_MOVING) nsleep_ms(20);
     if (!*running) return;
 

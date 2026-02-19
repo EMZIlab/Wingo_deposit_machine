@@ -1,5 +1,6 @@
-# ---- Motion ----
-move.speed_sps = 5000
+# ---- Motion (8000 steps per revolution) ----
+move.stp = 1000
+move.speed_sps = 10000
 move.acc_sps2  = 10000
 
 # ---- Homing ----
@@ -9,14 +10,14 @@ home.acc_sps2     = 8000
 home.offset_steps = 330
 
 # ---- Scale calibration ----
-hx.tare_offset_cts = 1707100
+hx.tare_offset_cts = 1651769
 hx.counts_per_kg   = 951010.0
 
 # ---- Wheight trigger kg example: 0.011 ----
-trigger.treshold = 0.020
+trigger.treshold = 0.015
 
 # ---- Sampling / logging ----
-sample.settle_ms   = 500
-sample.count       = 20
+sample.settle_ms   = 100
+sample.count       = 10
 sample.period_ms   = 50
 log.csv_path       = /home/pi5/dev/Wingo_deposit_machine/scale_log.csv
