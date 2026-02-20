@@ -1,11 +1,11 @@
-# ---- Motion (8000 steps per revolution) ----
-move.stp = 1000
+# ---- Motion (8000 steps per revolution -1333) ----
+move.stp = -1333
 move.speed_sps = 10000
 move.acc_sps2  = 10000
 
 # ---- Homing ----
 home.dir          = -1
-home.speed_sps    = 800
+home.speed_sps    = 2000
 home.acc_sps2     = 8000
 home.offset_steps = 330
 
@@ -17,7 +17,7 @@ hx.counts_per_kg   = 951010.0
 trigger.treshold = 0.015
 
 # ---- Sampling / logging ----
-sample.settle_ms   = 100
+sample.settle_ms   = 50
 sample.count       = 10
-sample.period_ms   = 50
-log.csv_path       = /home/pi5/dev/Wingo_deposit_machine/scale_log.csv
+sample.period_ms   = 25
+log.csv_path       = /home/pi5/dev/Wingo_deposit_machine/logs/scale_log3.csv

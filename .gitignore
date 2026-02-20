@@ -3,3 +3,4 @@ gpt.txt
 build
 bin
 archive
+*.csv

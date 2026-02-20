@@ -1,4 +1,3 @@
-// File: src/config/config.c
 #include "config.h"
 
 #include <stdio.h>

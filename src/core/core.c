@@ -25,7 +25,7 @@ static int file_is_empty(const char *path){
     return (st.st_size == 0);
 }
 
-static void append_csv(const char *path, double avg_kg){
+static void append_csv(const char *path, double avg_kg, const app_config_t *cfg){
     FILE *f = fopen(path, "a");
     if (!f) {
         perror("csv fopen");
@@ -33,10 +33,10 @@ static void append_csv(const char *path, double avg_kg){
     }
 
     if (file_is_empty(path)) {
-        fprintf(f, "avg_kg\n");
+        fprintf(f, "settle time, sample period, avg_kg\n");
     }
 
-    fprintf(f, "%.6f\n", avg_kg);
+    fprintf(f, "%i, %i, %.3f\n", cfg->settle_ms, cfg->sample_period_ms, avg_kg);
     fclose(f);
 }
 
@@ -51,7 +51,7 @@ static void weigh_and_log(const volatile sig_atomic_t *running, const app_config
     double avg = sum / (double)n;
     if (!*running) return;
     // 6) append to csv
-    append_csv(cfg->csv_path, avg);
+    append_csv(cfg->csv_path, avg, cfg);
     fprintf(stderr, "logged avg=%.6f kg to %s\n", avg, cfg->csv_path);
 }
 
@@ -74,19 +74,18 @@ static void weight_treshold(const volatile sig_atomic_t *running, const app_conf
     weigh_and_log(running, cfg);
 
     (void)stepper_start_move_abs(m1, cfg->move_stp, cfg->move_speed_sps, cfg->move_acc_sps2);
-    while (*running && m1->state == STP_MOVING) nsleep_ms(20);
+    while (*running && m1->state == STP_MOVING) nsleep_ms(10);
     if (!*running) return;
 
     (void)stepper_start_move_abs(m1, 0, cfg->move_speed_sps, cfg->move_acc_sps2);
-    while (*running && m1->state == STP_MOVING) nsleep_ms(20);
+    while (*running && m1->state == STP_MOVING) nsleep_ms(10);
 }
-
 
 void start_core(const volatile sig_atomic_t* running){
     app_config_t cfg;
     config_set_defaults(&cfg);
 
-    int rc = config_load_file(&cfg, "/home/pi5/dev/Wingo_deposit_machine/src/config/config.txt");
+    int rc = config_load_file(&cfg, "/home/pi5/dev/Wingo_deposit_machine/config.txt");
     if (rc == -1) {
         fprintf(stderr, "config: config.txt not found, using defaults\n");
     } else if (rc == -2) {
@@ -151,7 +150,7 @@ void start_core(const volatile sig_atomic_t* running){
     (void)stepper_start_homing(&m1, cfg.home_speed_sps, cfg.home_acc_sps2, (int8_t)cfg.home_dir);
 
     while (*running && m1.homed == 0) {
-        nsleep_ms(50);
+        nsleep_ms(20);
     }
     if (!*running) return;
 
